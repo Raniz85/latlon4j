@@ -4,7 +4,9 @@
 
 package se.raneland.latlon4j;
 
+import java.util.Iterator;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 import static java.lang.Math.acos;
 import static java.lang.Math.asin;
@@ -19,7 +21,7 @@ import static java.lang.Math.tan;
  * @created 2016-07-15.
  */
 @Data
-public class GreatCircle {
+public class GreatCircle implements Iterable<LatLon> {
 
     /** The start of the great circle */
     private final LatLon start;
@@ -114,5 +116,53 @@ public class GreatCircle {
         // Longitude of the waypoint
         double l = atan2(sin(a0) * sin(s), cos(s)) + l0;
         return new LatLon(Math.toDegrees(p), Math.toDegrees(l));
+    }
+
+    /**
+     * Return an iterator that iterates over waypoints on this great circle with 1 meter between points.
+     * @return
+     */
+    public Iterator<LatLon> iterator() {
+        return new WaypointIterator(1);
+    }
+
+    /**
+     * Return an iterable that iterates over waypoints on this great circle with a specific distance between points.
+     * @param delta The distance between points in meters
+     * @return
+     */
+    public Iterable<LatLon> iterable(double delta) {
+        if (delta <= 0) {
+            throw new IllegalArgumentException("Delta must be greater than zero");
+        }
+        return new WaypointIterable(delta);
+    }
+
+    @RequiredArgsConstructor
+    private class WaypointIterable implements Iterable<LatLon> {
+        private final double delta;
+
+        @Override
+        public Iterator<LatLon> iterator() {
+            return new WaypointIterator(delta);
+        }
+    }
+
+    @RequiredArgsConstructor
+    private class WaypointIterator implements Iterator<LatLon> {
+        private final double delta;
+        private double nextDistance = 0;
+
+        @Override
+        public boolean hasNext() {
+            return nextDistance <= length;
+        }
+
+        @Override
+        public LatLon next() {
+            final LatLon ll = waypoint(nextDistance);
+            nextDistance = Math.max(length, nextDistance + delta);
+            return ll;
+        }
     }
 }
