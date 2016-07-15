@@ -1,0 +1,120 @@
+/*
+ *    Copyright 2016 Daniel Raniz Raneland
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.3.1"
+    }
+}
+
+def siteUrl = "https://github.com/Raniz85/latlon4j"
+def gitUrl = "https://github.com/Raniz85/latlon4j.git"
+group = "se.raneland.latlon4j"
+
+// Version from git describe, default to "unknown" if git describe doesn't return anything
+version = ["git", "describe", "--dirty"].execute().in.text.trim() ?: "unknown"
+
+ext.spockVersion = "1.0-groovy-2.4"
+ext.groovyVersion = "2.4.7"
+
+apply plugin: "java"
+apply plugin: "groovy"
+apply plugin: "maven-publish"
+apply plugin: "com.jfrog.bintray"
+
+sourceCompatibility = "1.8"
+
+repositories {
+    jcenter()
+}
+
+configurations {
+    provided {
+        dependencies.all { dep ->
+            configurations.default.exclude group: dep.group, module: dep.name
+        }
+    }
+    compile.extendsFrom provided
+}
+
+dependencies {
+    provided "org.projectlombok:lombok:1.16.4"
+
+    testCompile "org.codehaus.groovy:groovy-all:${groovyVersion}"
+    testCompile "org.spockframework:spock-core:${spockVersion}"
+}
+
+test {
+    testLogging {
+        exceptionFormat = 'full'
+    }
+}
+
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+
+
+publishing {
+    publications {
+        java(MavenPublication) {
+            from components.java
+            groupId project.group
+            artifactId project.name
+            version project.version
+        }
+    }
+}
+
+bintray {
+    try {
+        user = bintrayUser
+        key = bintrayApiKey
+    } catch(MissingPropertyException e) {
+        // Ignore
+    }
+
+    publications = ["java"]
+    configurations = ["archives"]
+    pkg {
+        repo = "maven"
+        // it is the name that appears in bintray when logged
+        name = project.name
+        websiteUrl = siteUrl
+        vcsUrl = gitUrl
+        licenses = ["Apache-2.0"]
+        publish = true
+        version {
+            name = project.version
+                released = new Date()
+                vcsTag = "1.0.RELEASE"
+        }        
+    }
+} 
+
+task wrapper(type: Wrapper) {
+    gradleVersion = "2.13"
+}
