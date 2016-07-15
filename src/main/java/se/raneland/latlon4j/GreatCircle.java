@@ -45,7 +45,7 @@ public class GreatCircle {
     /** The central angle between start and end (&sigma;<sub>12</sub>) */
     private final double s12;
 
-    /** The distance in kilometers between start and end along the great circle */
+    /** The distance in meters between start and end along the great circle */
     private final double length;
 
     /** The azimuth of the great circle at the start (&alpha<sub>0</sub>)*/

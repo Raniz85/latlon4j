@@ -12,5 +12,9 @@ package se.raneland.latlon4j;
  */
 public class Constants {
 
-    public static final double EARTH_RADIUS = 6371.0088; // KM
+    /**
+     * Mean radius of the earth in meters.
+     * Source: https://en.wikipedia.org/wiki/Earth_radius#Mean_radius
+     */
+    public static final double EARTH_RADIUS = 6371008.8;
 }
